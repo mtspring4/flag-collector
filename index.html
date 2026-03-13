@@ -50,7 +50,7 @@
         }
         .judge-show { opacity: 1 !important; transform: scale(1.2); }
 
-        /* ゲット演出 */
+        /* ゲット演出レイヤー */
         #capture-scene {
             position: absolute;
             inset: 0;
@@ -63,18 +63,32 @@
         }
 
         .ball {
-            font-size: 4.5rem;
+            font-size: 5rem;
             position: absolute;
-            bottom: 15%;
+            bottom: 10%;
+            left: 50%;
+            margin-left: -2.5rem;
             filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
-            transition: all 0.5s cubic-bezier(0.5, 0, 0.5, 1);
+            transition: all 0.6s cubic-bezier(0.17, 0.67, 0.36, 1.2); /* 投げの物理挙動 */
             z-index: 202;
+            transform: scale(1);
         }
 
-        .ball-throw {
-            bottom: 55% !important;
-            transform: scale(0.3) rotate(1440deg);
+        /* 投げた時の移動先 */
+        .ball-thrown {
+            bottom: 50% !important;
+            transform: scale(0.4) rotate(1080deg) translateY(50px);
         }
+
+        /* ボールがガタガタ揺れる（判定待ち） */
+        @keyframes ball-wiggle {
+            0%, 100% { transform: scale(0.4) rotate(0deg); }
+            20% { transform: scale(0.4) rotate(-15deg); }
+            40% { transform: scale(0.4) rotate(15deg); }
+            60% { transform: scale(0.4) rotate(-10deg); }
+            80% { transform: scale(0.4) rotate(10deg); }
+        }
+        .ball-wiggle { animation: ball-wiggle 0.4s ease-in-out infinite; }
 
         @keyframes flash {
             0% { background: white; }
@@ -82,30 +96,17 @@
         }
         .flash-effect { animation: flash 0.4s ease-out; position: absolute; inset: 0; z-index: 210; pointer-events: none; }
 
-        @keyframes confetti-fall {
-            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        @keyframes flag-captured {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
         }
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: gold;
-            z-index: 205;
-            animation: confetti-fall 2s linear forwards;
-        }
-
-        @keyframes shake-intense {
-            0%, 100% { transform: translate(0, 0) rotate(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translate(-8px, 0) rotate(-2deg); }
-            20%, 40%, 60%, 80% { transform: translate(8px, 0) rotate(2deg); }
-        }
-        .shake-intense { animation: shake-intense 0.5s ease-in-out; }
+        .flag-capture-anim { animation: flag-captured 0.3s forwards ease-in; }
 
         .flag-render {
             font-size: clamp(80px, 15vh, 130px);
             line-height: 1.2;
             filter: drop-shadow(0 20px 25px rgba(0,0,0,0.1));
+            transition: all 0.3s ease;
         }
 
         .choice-btn {
@@ -118,38 +119,25 @@
 
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-        #modal-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(8px);
-            z-index: 600;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-        }
     </style>
 </head>
 <body>
 
     <div id="app-container">
-        <!-- 判定演出用 -->
         <div id="judge-overlay"></div>
 
-        <!-- ゲット演出レイヤー -->
+        <!-- ゲット演出 -->
         <div id="capture-scene">
             <div id="fx-layer"></div>
-            <div id="target-flag" class="flag-render mb-12"></div>
-            <div id="ball-action-msg" class="text-blue-600 font-black text-2xl mb-4 opacity-0 transition-opacity italic tracking-widest">カントリーボールをなげた！</div>
+            <div id="target-flag" class="flag-render mb-12 text-center"></div>
+            <div id="ball-action-msg" class="text-blue-600 font-black text-2xl mb-4 opacity-0 transition-opacity italic tracking-widest">ボールをなげた！</div>
             <div id="capture-ball" class="ball">⚽</div>
             <div id="capture-msg" class="mt-24 text-4xl font-black opacity-0"></div>
         </div>
 
-        <!-- 図鑑詳細モーダル -->
-        <div id="modal-overlay" onclick="closeModal()">
-            <div class="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl scale-in" onclick="event.stopPropagation()">
+        <!-- モーダル -->
+        <div id="modal-overlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[600] hidden items-center justify-center p-6" onclick="closeModal()">
+            <div class="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl" onclick="event.stopPropagation()">
                 <div id="modal-content"></div>
                 <button onclick="closeModal()" class="w-full mt-6 bg-slate-100 py-4 rounded-2xl font-black text-slate-500 hover:bg-slate-200 transition">とじる</button>
             </div>
@@ -201,15 +189,15 @@
         {f: "🇰🇬", n: "キルギス", c: "ビシュケク", k: "中央アジアの山岳。"},
         {f: "🇦🇩", n: "アンドラ"}, {f: "🇦🇪", n: "アラブ首長国連邦"}, {f: "🇦🇫", n: "アフガニスタン"}, {f: "🇦🇬", n: "アンティグア・バーブーダ"}, {f: "🇦🇮", n: "アンギラ"}, {f: "🇦🇱", n: "アルバニア"}, {f: "🇦🇲", n: "アルメニア"}, {f: "🇦🇴", n: "アンゴラ"}, {f: "🇦🇶", n: "南極"}, {f: "🇦🇸", n: "美領サモア"}, {f: "🇦🇼", n: "アルバ"}, {f: "🇦🇽", n: "オーランド諸島"}, {f: "🇦🇿", n: "アゼルバイジャン"}, {f: "🇧🇦", n: "ボスニア・ヘルツェゴビナ"}, {f: "🇧🇧", n: "バルバドス"}, {f: "🇧🇩", n: "バングラデシュ"}, {f: "🇧🇫", n: "ブルキナファソ"}, {f: "🇧🇬", n: "ブルガリア"}, {f: "🇧🇭", n: "バーレーン"}, {f: "🇧🇮", n: "ブルンジ"}, {f: "🇧🇯", n: "ベナン"}, {f: "🇧🇱", n: "サン・バルテルミー"}, {f: "🇧🇲", n: "バミューダ"}, {f: "🇧🇳", n: "ブルネイ"}, {f: "🇧🇴", n: "ボリビア"}, {f: "🇧🇶", n: "カリブ海オランダ"}, {f: "🇧🇸", n: "バハマ"}, {f: "🇧🇹", n: "ブータン"}, {f: "🇧🇻", n: "ブーベ島"}, {f: "🇧🇼", n: "ボツワナ"}, {f: "🇧🇾", n: "ベラルーシ"}, {f: "🇧🇿", n: "ベリーズ"}, {f: "🇨🇨", n: "ココス諸島"}, {f: "🇨🇩", n: "コンゴ民主共和国"}, {f: "🇨🇫", n: "中央アフリカ"}, {f: "🇨🇬", n: "コンゴ共和国"}, {f: "🇨🇮", n: "コートジボワール"}, {f: "🇨🇰", n: "クック諸島"}, {f: "🇨🇱", n: "チリ"}, {f: "🇨🇲", n: "カメルーン"}, {f: "🇨🇴", n: "コロンビア"}, {f: "🇨🇵", n: "クリッパー島"}, {f: "🇨🇷", n: "コスタリカ"}, {f: "🇨🇺", n: "キューバ"}, {f: "🇨🇻", n: "カーボベルデ"}, {f: "🇨🇼", n: "キュラソー"}, {f: "🇨🇽", n: "クリスマス島"}, {f: "🇨🇾", n: "キプロス"}, {f: "🇨🇿", n: "チェコ"}, {f: "🇩🇯", n: "ジブチ"}, {f: "🇩🇰", n: "デンマーク"}, {f: "🇩🇲", n: "ドミニカ国"}, {f: "🇩🇴", n: "ドミニカ共和国"}, {f: "🇩🇿", n: "アルジェリア"}, {f: "🇪🇦", n: "セウタ・メリリャ"}, {f: "🇪🇨", n: "エクアドル"}, {f: "🇪🇪", n: "エストニア"}, {f: "🇪🇭", n: "西サハラ"}, {f: "🇪🇷", n: "エリトリア"}, {f: "🇪🇸", n: "スペイン"}, {f: "🇪🇹", n: "エチオピア"}, {f: "🇪🇺", n: "欧州連合"}, {f: "🇫🇰", n: "フォークランド諸島"}, {f: "🇫🇲", n: "ミクロネシア"}, {f: "🇫🇴", n: "フェロー諸島"}, {f: "🇬🇦", n: "ガボン"}, {f: "🇬🇩", n: "グレナダ"}, {f: "🇬🇪", n: "ジョージア"}, {f: "🇬🇫", n: "仏領ギアナ"}, {f: "🇬🇬", n: "ガーンジー"}, {f: "🇬🇭", n: "ガーナ"}, {f: "🇬🇮", n: "ジブラルタル"}, {f: "🇬🇱", n: "グリーンランド"}, {f: "🇬🇲", n: "ガンビア"}, {f: "🇬🇳", n: "ギニア"}, {f: "🇬🇵", n: "グアドループ"}, {f: "🇬🇶", n: "赤道ギニア"}, {f: "🇬🇸", n: "サウスジョージア"}, {f: "🇬🇹", n: "グアテマラ"}, {f: "🇬🇺", n: "グアム"}, {f: "🇬🇼", n: "ギニアビサウ"}, {f: "🇬🇾", n: "ガイアナ"}, {f: "🇭🇰", n: "香港"}, {f: "🇭🇲", n: "ハード島"}, {f: "🇭🇳", n: "ホンジュラス"}, {f: "🇭🇷", n: "クロアチア"}, {f: "🇭🇹", n: "ハイチ"}, {f: "🇭🇺", n: "ハンガリー"}, {f: "🇮🇨", n: "カナリア諸島"}, {f: "🇮🇪", n: "アイルランド"}, {f: "🇮🇱", n: "イスラエル"}, {f: "🇮🇲", n: "マン島"}, {f: "🇮🇴", n: "英領インド洋地域"}, {f: "🇮🇶", n: "イラク"}, {f: "🇮🇸", n: "アイスランド"}, {f: "🇯🇪", n: "ジャージー"}, {f: "🇯🇲", n: "ジャマイカ"}, {f: "🇯🇴", n: "ヨルダン"}, {f: "🇰🇪", n: "ケニア"}, {f: "🇰🇮", n: "キリバス"}, {f: "🇰🇲", n: "コモロ"}, {f: "🇰🇳", n: "セントクリストファー"}, {f: "🇰🇵", n: "北朝鮮"}, {f: "🇰🇼", n: "クウェート"}, {f: "🇰🇾", n: "ケイマン諸島"}, {f: "🇰🇿", n: "カザフスタン"}, {f: "🇱🇦", n: "ラオス"}, {f: "🇱🇧", n: "レバノン"}, {f: "🇱🇨", n: "セントルシア"}, {f: "🇱🇮", n: "リヒテンシュタイン"}, {f: "🇱🇰", n: "スリランカ"}, {f: "🇱🇷", n: "リベリア"}, {f: "🇱🇸", n: "レソト"}, {f: "🇱🇹", n: "リトアニア"}, {f: "🇱🇺", n: "ルクセンブルク"}, {f: "🇱🇻", n: "ラトビア"}, {f: "🇱🇾", n: "リビア"}, {f: "🇲🇦", n: "モロッコ"}, {f: "🇲🇨", n: "モナコ"}, {f: "🇲🇩", n: "モルドバ"}, {f: "🇲🇪", n: "モンテネグロ"}, {f: "🇲🇫", n: "サン・マルタン"}, {f: "🇲🇬", n: "マダガスカル"}, {f: "🇲🇭", n: "マーシャル諸島"}, {f: "🇲🇰", n: "北マケドニア"}, {f: "🇲🇱", n: "マリ"}, {f: "🇲🇲", n: "ミャンマー"}, {f: "🇲🇳", n: "モンゴル"}, {f: "🇲🇴", n: "マカオ"}, {f: "🇲🇵", n: "北マリアナ"}, {f: "🇲🇶", n: "マルティニーク"}, {f: "🇲🇷", n: "モーリタニア"}, {f: "🇲🇸", n: "モントセラト"}, {f: "🇲🇹", n: "マルタ"}, {f: "🇲🇺", n: "モーリシャス"}, {f: "🇲🇻", n: "モルディブ"}, {f: "🇲🇼", n: "マラウイ"}, {f: "🇲🇿", n: "モザンビーク"}, {f: "🇳🇦", n: "ナミビア"}, {f: "🇳🇨", n: "ニューカレドニア"}, {f: "🇳🇪", n: "ニジェール"}, {f: "🇳🇫", n: "ノーフォーク島"}, {f: "🇳🇬", n: "ナイジェリア"}, {f: "🇳🇮", n: "ニカラグア"}, {f: "🇳🇴", n: "ノルウェー"}, {f: "🇳🇷", n: "ナウル"}, {f: "🇳🇺", n: "ニウエ"}, {f: "🇳🇿", n: "ニュージーランド"}, {f: "🇴🇲", n: "オマーン"}, {f: "🇵🇦", n: "パナマ"}, {f: "🇵🇪", n: "ペルー"}, {f: "🇵🇫", n: "英領ポリネシア"}, {f: "🇵🇬", n: "パプアニューギニア"}, {f: "🇵🇰", n: "パキスタン"}, {f: "🇵🇲", n: "サンピエール"}, {f: "🇵🇳", n: "ピトケアン"}, {f: "🇵🇷", n: "プエルトリコ"}, {f: "🇵🇸", n: "パレスチナ"}, {f: "🇵🇼", n: "パラオ"}, {f: "🇵🇾", n: "パラグアイ"}, {f: "🇶🇦", n: "カタール"}, {f: "🇷🇪", n: "レユニオン"}, {f: "🇷🇴", n: "ルーマニア"}, {f: "🇷🇸", n: "セルビア"}, {f: "🇷🇼", n: "ルワンダ"}, {f: "🇸🇦", n: "サウジアラビア"}, {f: "🇸🇧", n: "ソロモン諸島"}, {f: "🇸🇨", n: "セーシェル"}, {f: "🇸🇩", n: "スーダン"}, {f: "🇸🇪", n: "スウェーデン"}, {f: "🇸🇭", n: "セントヘレナ"}, {f: "🇸🇮", n: "スロベニア"}, {f: "🇸🇯", n: "ヤンマイエン"}, {f: "🇸🇰", n: "スロバキア"}, {f: "🇸🇱", n: "シエラレオネ"}, {f: "🇸🇲", n: "サンマリノ"}, {f: "🇸🇳", n: "セネガル"}, {f: "🇸🇴", n: "ソマリア"}, {f: "🇸🇷", n: "スリナム"}, {f: "🇸🇸", n: "南スーダン"}, {f: "🇸🇹", n: "サントメ"}, {f: "🇸🇻", n: "エルサルバドル"}, {f: "🇸🇽", n: "シント・マールテン"}, {f: "🇸🇾", n: "シリア"}, {f: "🇸🇿", n: "エスワティニ"}, {f: "🇹🇦", n: "トリスタンダクーニャ"}, {f: "🇹🇨", n: "タークス・カイコス"}, {f: "🇹🇫", n: "仏領南方"}, {f: "🇹🇬", n: "トーゴ"}, {f: "🇹🇯", n: "タジキスタン"}, {f: "🇹🇰", n: "トケラウ"}, {f: "🇹🇱", n: "東ティモール"}, {f: "🇹🇲", n: "トルクメニスタン"}, {f: "🇹🇳", n: "チュニジア"}, {f: "🇹🇴", n: "トンガ"}, {f: "🇹🇹", n: "トリニダード・トバゴ"}, {f: "🇹🇻", n: "ツバル"}, {f: "🇹🇿", n: "タンザニア"}, {f: "🇺🇦", n: "ウクライナ"}, {f: "🇺🇬", n: "ウガンダ"}, {f: "🇺🇲", n: "合衆国離島"}, {f: "🇺🇾", n: "ウルグアイ"}, {f: "🇺🇿", n: "ウズベキスタン"}, {f: "🇻🇦", n: "バチカン"}, {f: "🇻🇨", n: "セントビンセント"}, {f: "🇻🇪", n: "ベネズエラ"}, {f: "🇻🇬", n: "英領ヴァージン"}, {f: "🇻🇮", n: "米領ヴァージン"}, {f: "🇻🇺", n: "バヌアツ"}, {f: "🇼🇫", n: "ウォリス・フツナ"}, {f: "🇼🇸", n: "サモア"}, {f: "🇽🇰", n: "コソボ"}, {f: "🇾🇪", n: "イエメン"}, {f: "🇾🇹", n: "マヨット"}, {f: "🇿🇦", n: "南アフリカ"}, {f: "🇿🇲", n: "ザンビア"}, {f: "🇿🇼", n: "ジンバブエ"}
     ];
-
-    const STORAGE_COLLECTION = 'flag_master_v17_caught';
-    const STORAGE_KNOWN = 'flag_master_v17_known';
+    const STORAGE_COLLECTION = 'flag_master_v19_caught';
+    const STORAGE_KNOWN = 'flag_master_v19_known';
     
     let state = {
         screen: 'title',
         quiz: [],
         index: 0,
-        score: 0,
+        correctCount: 0,
+        getScore: 0,
         collection: JSON.parse(localStorage.getItem(STORAGE_COLLECTION) || '[]'),
         known: JSON.parse(localStorage.getItem(STORAGE_KNOWN) || '[]'),
         isAnswering: false
@@ -220,9 +208,7 @@
         if (state.screen === 'title') {
             root.innerHTML = `
                 <div class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50">
-                    <div class="mb-10 animate-bounce">
-                        <div class="text-[100px]">👑</div>
-                    </div>
+                    <div class="mb-10 animate-bounce"><div class="text-[100px]">👑</div></div>
                     <h1 class="text-4xl font-black text-slate-800 tracking-tighter leading-tight mb-4">国旗マスター<br><span class="text-blue-600">EVOLUTION</span></h1>
                     <p class="text-slate-400 mb-10 text-sm font-bold bg-white px-4 py-2 rounded-full shadow-sm">全254カ国の頂点を目指せ！</p>
                     <div class="w-full max-w-xs space-y-4">
@@ -235,9 +221,12 @@
             const q = state.quiz[state.index];
             root.innerHTML = `
                 <div class="flex-1 flex flex-col h-full overflow-hidden">
-                    <div class="p-4 flex justify-between items-center text-[11px] font-black text-slate-400">
-                        <span>STAGE ${state.index + 1}/10</span>
-                        <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full shadow-sm">GET ${state.score}</span>
+                    <div class="p-4 flex justify-between items-center text-[11px] font-black">
+                        <span class="text-slate-400 uppercase tracking-widest">Stage ${state.index + 1}/10</span>
+                        <div class="flex gap-2">
+                            <span class="bg-green-100 text-green-600 px-3 py-1 rounded-full shadow-sm">OK ${state.correctCount}</span>
+                            <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full shadow-sm">GET ${state.getScore}</span>
+                        </div>
                     </div>
                     <div class="flex-1 flex flex-col items-center justify-center py-4 bg-white">
                         <div class="flag-render">${q.flag}</div>
@@ -259,9 +248,10 @@
             root.innerHTML = `
                 <div class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-blue-600 text-white">
                     <div class="text-[80px] mb-4">🏁</div>
-                    <h2 class="text-2xl font-black mb-2">RESULT</h2>
-                    <div class="text-8xl font-black mb-10">${state.score}</div>
-                    <p class="font-bold opacity-80 mb-12 italic">新しく ${state.score} カ国をゲットした！</p>
+                    <h2 class="text-2xl font-black mb-2 uppercase tracking-widest">Result</h2>
+                    <div class="text-xl font-bold mb-2 opacity-80">正解数: ${state.correctCount} / 10</div>
+                    <div class="text-xl font-bold mb-2">ゲット数:</div>
+                    <div class="text-8xl font-black mb-10">${state.getScore}</div>
                     <div class="w-full max-w-xs space-y-4">
                         <button onclick="startQuiz()" class="w-full bg-white text-blue-600 font-black py-5 rounded-3xl shadow-2xl active:scale-95">もう一度調査</button>
                         <button onclick="goHome()" class="w-full bg-blue-700 text-white font-black py-4 rounded-3xl active:scale-95 border border-blue-500">タイトルへ</button>
@@ -319,13 +309,13 @@
             return;
         }
 
-        // 正解＝名前判明
+        state.correctCount++;
         if (!state.known.includes(q.flag)) {
             state.known.push(q.flag);
             localStorage.setItem(STORAGE_KNOWN, JSON.stringify(state.known));
         }
 
-        // 豪華ゲット演出開始
+        // ゲット演出開始
         const scene = document.getElementById('capture-scene');
         const target = document.getElementById('target-flag');
         const ball = document.getElementById('capture-ball');
@@ -333,78 +323,86 @@
         const msg = document.getElementById('capture-msg');
         const fxLayer = document.getElementById('fx-layer');
         
-        // 演出リセット
+        // リセット
         msg.classList.add('opacity-0');
-        msg.classList.remove('animate-bounce');
         msg.textContent = ""; 
-
         target.textContent = q.flag;
-        target.className = 'flag-render mb-12';
-        ball.className = 'ball';
+        target.classList.remove('flag-capture-anim');
+        target.style.opacity = "1";
+        target.style.transform = "scale(1)";
+        ball.classList.remove('ball-thrown', 'ball-wiggle');
         ball.style.display = 'block';
+        ball.style.bottom = "10%";
         actionMsg.classList.add('opacity-0');
         scene.style.display = 'flex';
 
-        await new Promise(r => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, 100));
         
-        // 投球演出
+        // 投球！
         actionMsg.classList.remove('opacity-0');
-        ball.classList.add('ball-throw');
+        ball.classList.add('ball-thrown');
         
+        // 当たる瞬間に合わせる (0.5s程度)
         await new Promise(r => setTimeout(r, 500));
         
-        // ヒット時フラッシュ
+        // 吸い込み演出
+        target.classList.add('flag-capture-anim');
         const flash = document.createElement('div');
         flash.className = 'flash-effect';
         fxLayer.appendChild(flash);
         setTimeout(() => flash.remove(), 400);
 
-        ball.style.display = 'none';
-        target.classList.add('shake-intense');
+        // 判定待ち（ボールが揺れる）
+        ball.classList.add('ball-wiggle');
         actionMsg.classList.add('opacity-0');
-        
-        // 当たってから揺れている間を待つ（ここで判定が見えないようにする）
-        await new Promise(r => setTimeout(r, 700));
 
-        // 成功判定
-        const success = Math.random() < 0.5; // 50%
+        // タメの演出
+        const waitTime = Math.random() > 0.6 ? 2500 : 1000; 
+        await new Promise(r => setTimeout(r, waitTime));
+
+        ball.classList.remove('ball-wiggle');
+        const success = Math.random() < 0.5;
+
         if (success) {
-            msg.textContent = "SUCCESS!!";
-            msg.className = "mt-24 text-4xl font-black text-yellow-500 opacity-100 animate-bounce drop-shadow-lg";
-            state.score++;
-            
-            // 紙吹雪エフェクト
-            for(let i=0; i<40; i++) {
-                createConfetti();
-            }
-
+            msg.textContent = "GET！";
+            msg.className = "mt-24 text-5xl font-black text-yellow-500 opacity-100 animate-bounce drop-shadow-lg";
+            state.getScore++;
+            for(let i=0; i<40; i++) createConfetti();
             if (!state.collection.includes(q.flag)) {
                 state.collection.push(q.flag);
                 localStorage.setItem(STORAGE_COLLECTION, JSON.stringify(state.collection));
             }
+            ball.style.transform = "scale(0.4) rotate(0deg)";
         } else {
-            msg.textContent = "MISSED...";
+            msg.textContent = "逃げられた！";
             msg.className = "mt-24 text-3xl font-black text-slate-400 opacity-100";
+            ball.style.display = 'none';
+            target.classList.remove('flag-capture-anim');
             target.style.opacity = "0.2";
+            target.style.transform = "scale(1)";
         }
 
-        await new Promise(r => setTimeout(r, 1500));
+        await new Promise(r => setTimeout(r, 1800));
         scene.style.display = 'none';
-        target.style.opacity = "1";
         state.isAnswering = false;
         nextQuestion();
     }
 
     function createConfetti() {
         const c = document.createElement('div');
-        c.className = 'confetti';
+        c.className = 'absolute w-2 h-2 rounded-full pointer-events-none';
         c.style.left = Math.random() * 100 + 'vw';
-        c.style.backgroundColor = ['#fbbf24', '#f59e0b', '#3b82f6', '#ef4444', '#10b981'][Math.floor(Math.random()*5)];
-        c.style.width = (Math.random() * 8 + 5) + 'px';
-        c.style.height = c.style.width;
-        c.style.animationDuration = (Math.random() * 1 + 1) + 's';
+        c.style.backgroundColor = ['#fbbf24', '#3b82f6', '#ef4444', '#10b981'][Math.floor(Math.random()*4)];
+        c.style.top = '-20px';
+        c.style.zIndex = '210';
         document.getElementById('fx-layer').appendChild(c);
-        setTimeout(() => c.remove(), 2000);
+        
+        const duration = Math.random() * 2 + 1;
+        c.animate([
+            { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+            { transform: `translateY(100vh) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+        ], { duration: duration * 1000, easing: 'linear' });
+        setTimeout(() => c.remove(), duration * 1000);
     }
 
     function nextQuestion() {
@@ -423,47 +421,33 @@
         const content = document.getElementById('modal-content');
         
         if (!isKnown) {
-            content.innerHTML = `
-                <div class="text-center py-6">
-                    <div class="text-[90px] opacity-10 mb-6">${flagEmoji}</div>
-                    <h3 class="text-2xl font-black text-slate-300">MISSING</h3>
-                    <p class="text-slate-400 mt-2 font-bold text-sm">調査の旅に出て発見しよう！</p>
-                </div>
-            `;
-        } else if (!isCaught) {
-            content.innerHTML = `
-                <div class="text-center">
-                    <div class="text-[110px] mb-4">${country.f}</div>
-                    <h3 class="text-3xl font-black text-slate-800 mb-6">${country.n}</h3>
-                    <div class="bg-blue-50 border-2 border-dashed border-blue-200 p-6 rounded-[2.5rem]">
-                        <p class="text-blue-600 font-black text-sm leading-relaxed uppercase tracking-tighter">Caught status: No</p>
-                        <p class="text-slate-500 font-bold text-xs mt-2 italic">ゲットすると機密データが解禁されます</p>
-                    </div>
-                </div>
-            `;
+            content.innerHTML = `<div class="text-center py-6"><div class="text-8xl opacity-10 mb-6">${flagEmoji}</div><h3 class="text-2xl font-black text-slate-300 italic">UNKNOWN</h3></div>`;
         } else {
             content.innerHTML = `
                 <div class="text-center">
-                    <div class="bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-[10px] font-black w-fit mx-auto px-4 py-1.5 rounded-full mb-6 shadow-md uppercase tracking-widest">Mastered</div>
-                    <div class="text-[110px] mb-4 drop-shadow-xl">${country.f}</div>
-                    <h3 class="text-4xl font-black text-slate-800 mb-8 tracking-tighter">${country.n}</h3>
-                    <div class="space-y-4 text-left">
-                        <div class="bg-blue-600 text-white p-5 rounded-[2.5rem] shadow-lg">
-                            <span class="text-[10px] font-black opacity-60 block uppercase mb-1 tracking-widest">Capital City</span>
-                            <p class="font-black text-2xl">${country.c || "---"}</p>
+                    <div class="text-8xl mb-4 drop-shadow-xl">${country.f}</div>
+                    <h3 class="text-3xl font-black text-slate-800 mb-6">${country.n}</h3>
+                    ${isCaught ? `
+                        <div class="bg-blue-600 text-white p-5 rounded-3xl shadow-lg text-left">
+                            <span class="text-[10px] font-black opacity-60 block uppercase mb-1">Capital</span>
+                            <p class="font-black text-xl">${country.c || "---"}</p>
                         </div>
-                        <div class="bg-slate-100 p-6 rounded-[2.5rem]">
-                            <span class="text-[10px] font-black text-slate-400 block uppercase mb-2 tracking-widest">National Data</span>
+                        <div class="bg-slate-100 p-5 rounded-3xl mt-4 text-left">
                             <p class="text-slate-700 text-sm font-bold leading-relaxed">${country.k || "詳細データ収集中..."}</p>
                         </div>
-                    </div>
+                    ` : `<div class="p-6 border-2 border-dashed border-slate-200 rounded-3xl text-slate-400 font-bold">ゲットすると詳細が見れます</div>`}
                 </div>
             `;
         }
-        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
     }
 
-    function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+    function closeModal() {
+        const modal = document.getElementById('modal-overlay');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
 
     function startQuiz() {
         const shuffled = [...countryData].sort(() => Math.random() - 0.5);
@@ -473,7 +457,7 @@
             opts.push(...pool.slice(0, 3).map(x => x.n));
             return { flag: c.f, name: c.n, options: opts.sort(() => Math.random() - 0.5) };
         });
-        state.index = 0; state.score = 0; state.screen = 'quiz'; render();
+        state.index = 0; state.correctCount = 0; state.getScore = 0; state.screen = 'quiz'; render();
     }
 
     function goHome() { state.screen = 'title'; render(); }
