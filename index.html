@@ -31,8 +31,8 @@
             height: 92vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
             position: relative;
+            overflow: hidden;
         }
 
         /* 判定オーバーレイ */
@@ -70,60 +70,18 @@
             overflow: hidden;
         }
 
-        /* 放射状の後光 */
         .halo-effect {
             position: absolute;
             width: 800px;
             height: 800px;
-            background: conic-gradient(
-                from 0deg,
-                transparent 0deg,
-                rgba(255, 215, 0, 0.4) 10deg,
-                transparent 20deg,
-                transparent 30deg,
-                rgba(255, 215, 0, 0.4) 40deg,
-                transparent 50deg,
-                transparent 60deg,
-                rgba(255, 215, 0, 0.4) 70deg,
-                transparent 80deg,
-                transparent 90deg,
-                rgba(255, 215, 0, 0.4) 100deg,
-                transparent 110deg,
-                transparent 120deg,
-                rgba(255, 215, 0, 0.4) 130deg,
-                transparent 140deg,
-                transparent 150deg,
-                rgba(255, 215, 0, 0.4) 160deg,
-                transparent 170deg,
-                transparent 180deg,
-                rgba(255, 215, 0, 0.4) 190deg,
-                transparent 200deg,
-                transparent 210deg,
-                rgba(255, 215, 0, 0.4) 220deg,
-                transparent 230deg,
-                transparent 240deg,
-                rgba(255, 215, 0, 0.4) 250deg,
-                transparent 260deg,
-                transparent 270deg,
-                rgba(255, 215, 0, 0.4) 280deg,
-                transparent 290deg,
-                transparent 300deg,
-                rgba(255, 215, 0, 0.4) 310deg,
-                transparent 320deg,
-                transparent 330deg,
-                rgba(255, 215, 0, 0.4) 340deg,
-                transparent 350deg
-            );
+            background: conic-gradient(from 0deg, transparent 0deg, rgba(255, 215, 0, 0.4) 10deg, transparent 20deg, transparent 30deg, rgba(255, 215, 0, 0.4) 40deg, transparent 50deg, transparent 60deg, rgba(255, 215, 0, 0.4) 70deg, transparent 80deg, transparent 90deg, rgba(255, 215, 0, 0.4) 100deg, transparent 110deg, transparent 120deg, rgba(255, 215, 0, 0.4) 130deg, transparent 140deg, transparent 150deg, rgba(255, 215, 0, 0.4) 160deg, transparent 170deg, transparent 180deg, rgba(255, 215, 0, 0.4) 190deg, transparent 200deg, transparent 210deg, rgba(255, 215, 0, 0.4) 220deg, transparent 230deg, transparent 240deg, rgba(255, 215, 0, 0.4) 250deg, transparent 260deg, transparent 270deg, rgba(255, 215, 0, 0.4) 280deg, transparent 290deg, transparent 300deg, rgba(255, 215, 0, 0.4) 310deg, transparent 320deg, transparent 330deg, rgba(255, 215, 0, 0.4) 340deg, transparent 350deg);
             animation: rotate-halo 10s linear infinite;
             z-index: 201;
             display: none;
             mask-image: radial-gradient(circle, black 20%, transparent 70%);
             -webkit-mask-image: radial-gradient(circle, black 20%, transparent 70%);
         }
-        @keyframes rotate-halo {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
+        @keyframes rotate-halo { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         .ball {
             font-size: 5rem;
@@ -137,10 +95,7 @@
             transform: scale(1);
         }
 
-        .ball-thrown {
-            bottom: 50% !important;
-            transform: scale(0.4) rotate(1080deg) translateY(50px);
-        }
+        .ball-thrown { bottom: 50% !important; transform: scale(0.4) rotate(1080deg) translateY(50px); }
 
         @keyframes ball-wiggle {
             0%, 100% { transform: scale(0.4) rotate(0deg); }
@@ -157,12 +112,6 @@
         }
         .flash-effect { animation: flash 0.4s ease-out; position: absolute; inset: 0; z-index: 210; pointer-events: none; }
 
-        @keyframes flag-captured {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(0); opacity: 0; }
-        }
-        .flag-capture-anim { animation: flag-captured 0.3s forwards ease-in; }
-
         .flag-render {
             font-size: clamp(80px, 15vh, 130px);
             line-height: 1.2;
@@ -176,16 +125,16 @@
             min-height: 64px;
             font-weight: 900;
         }
-        .choice-btn:active { transform: scale(0.95); }
+        .choice-btn:active { transform: scale(0.95); background-color: #f8fafc; }
 
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         
-        .heart-particle { position: absolute; pointer-events: none; animation: heart-float 1s forwards ease-out; }
         @keyframes heart-float {
             0% { transform: translate(0, 0) scale(1); opacity: 1; }
             100% { transform: translate(var(--tw-x), var(--tw-y)) scale(1.5); opacity: 0; }
         }
+        .heart-particle { position: absolute; pointer-events: none; animation: heart-float 1s forwards ease-out; }
 
         @keyframes fade-in-out {
             0% { opacity: 0; transform: scale(0.8); }
@@ -199,12 +148,10 @@
 <body>
 
     <div id="app-container">
-        <!-- 判定オーバーレイ -->
         <div id="judge-overlay">
             <div id="judge-icon"></div>
         </div>
 
-        <!-- ゲット演出 -->
         <div id="capture-scene">
             <div id="fx-layer"></div>
             <div id="halo-ring" class="halo-effect"></div>
@@ -214,21 +161,20 @@
             <div id="capture-msg" class="mt-24 text-center z-[205] opacity-0 transition-opacity duration-300"></div>
         </div>
 
-        <!-- モーダル -->
+        <!-- モーダル系 -->
         <div id="modal-overlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[600] hidden items-center justify-center p-6" onclick="closeModal()">
             <div class="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl flex flex-col max-h-[85vh]" onclick="event.stopPropagation()">
                 <div id="modal-content" class="overflow-y-auto custom-scroll flex-1 pr-2"></div>
-                <button onclick="closeModal()" class="w-full mt-6 bg-slate-100 py-4 rounded-2xl font-black text-slate-500 hover:bg-slate-200 transition shrink-0">とじる</button>
+                <button onclick="uiClick(); closeModal()" class="w-full mt-6 bg-slate-100 py-4 rounded-2xl font-black text-slate-500 hover:bg-slate-200 transition shrink-0">とじる</button>
             </div>
         </div>
 
-        <!-- 確認モーダル -->
         <div id="confirm-overlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[700] hidden items-center justify-center p-6">
             <div class="bg-white w-full max-w-xs rounded-[3rem] p-8 shadow-2xl text-center">
                 <div id="confirm-content"></div>
                 <div class="grid grid-cols-2 gap-4 mt-6">
                     <button id="confirm-yes" class="bg-red-500 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition">はい</button>
-                    <button onclick="closeConfirm()" class="bg-slate-100 text-slate-500 font-black py-4 rounded-2xl active:scale-95 transition">いいえ</button>
+                    <button onclick="uiClick(); closeConfirm()" class="bg-slate-100 text-slate-500 font-black py-4 rounded-2xl active:scale-95 transition">いいえ</button>
                 </div>
             </div>
         </div>
@@ -499,18 +445,17 @@
         {f:"🇿🇲",n:"ザンビア",c:"ルサカ",k:"ビクトリア滝の国。"},
         {f:"🇿🇼",n:"ジンバブエ",c:"ハラレ",k:"南部アフリカの内陸国。"}
     ];
-
-    
-    const STORAGE_COLLECTION = 'flag_master_v21_caught';
-    const STORAGE_KNOWN = 'flag_master_v21_known';
+    const STORAGE_COLLECTION = 'flag_master_v22_caught';
+    const STORAGE_KNOWN = 'flag_master_v22_known';
     const LIMIT_TIME = 10;
     
-    // --- Audio System ---
+    // --- 音響システム ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
 
     function initAudio() {
         if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
     }
 
     function playTone(freq, duration, type = 'sine', volume = 0.1) {
@@ -528,16 +473,16 @@
     }
 
     const sounds = {
+        btn: () => playTone(880, 0.1, 'sine', 0.05), // ボタン押下
         correct: () => {
-            playTone(523.25, 0.1, 'square', 0.05); // C5
-            setTimeout(() => playTone(659.25, 0.2, 'square', 0.05), 100); // E5
+            playTone(523.25, 0.1, 'square', 0.05);
+            setTimeout(() => playTone(659.25, 0.2, 'square', 0.05), 100);
         },
         wrong: () => {
-            playTone(220, 0.1, 'sawtooth', 0.1); // A3
-            setTimeout(() => playTone(196, 0.3, 'sawtooth', 0.1), 100); // G3
+            playTone(220, 0.1, 'sawtooth', 0.1);
+            setTimeout(() => playTone(196, 0.3, 'sawtooth', 0.1), 100);
         },
         throw: () => {
-            if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.frequency.setValueAtTime(100, audioCtx.currentTime);
@@ -555,7 +500,12 @@
         tick: () => playTone(880, 0.05, 'sine', 0.02)
     };
 
-    // --- State ---
+    function uiClick() {
+        initAudio();
+        sounds.btn();
+    }
+
+    // --- 状態管理 ---
     let state = {
         screen: 'title',
         quiz: [],
@@ -582,14 +532,14 @@
                         <div id="title-flag-display" class="text-[100px] animate-flag-switch">${state.titleFlag}</div>
                     </div>
                     <h1 class="text-4xl font-black text-slate-800 tracking-tighter leading-tight mb-4">国旗マスター<br><span class="text-blue-600">EVOLUTION</span></h1>
-                    <p class="text-slate-400 mb-10 text-sm font-bold bg-white px-4 py-2 rounded-full shadow-sm">全254カ国の頂点を目指せ！</p>
+                    <p class="text-slate-400 mb-10 text-sm font-bold bg-white px-4 py-2 rounded-full shadow-sm">全${countryData.length}カ国を調査せよ！</p>
                     <div class="w-full max-w-xs space-y-4">
-                        <button onclick="startQuiz()" class="w-full bg-blue-600 text-white font-black py-5 rounded-3xl shadow-xl active:scale-95 transition text-xl">調査を開始</button>
+                        <button onclick="uiClick(); startQuiz()" class="w-full bg-blue-600 text-white font-black py-5 rounded-3xl shadow-xl active:scale-95 transition text-xl">調査を開始</button>
                         <div class="grid grid-cols-2 gap-3">
-                            <button onclick="showCollection()" class="bg-white border-2 border-slate-200 text-slate-600 font-black py-4 rounded-3xl active:scale-95 shadow-sm text-sm">
+                            <button onclick="uiClick(); showCollection()" class="bg-white border-2 border-slate-200 text-slate-600 font-black py-4 rounded-3xl active:scale-95 shadow-sm text-sm">
                                 ${isComp ? '👑 ' : ''}図鑑 ${state.collection.length}/${countryData.length}
                             </button>
-                            <button onclick="showHowTo()" class="bg-blue-50 border-2 border-blue-100 text-blue-500 font-black py-4 rounded-3xl active:scale-95 text-sm shadow-sm">遊び方</button>
+                            <button onclick="uiClick(); showHowTo()" class="bg-blue-50 border-2 border-blue-100 text-blue-500 font-black py-4 rounded-3xl active:scale-95 text-sm shadow-sm">遊び方</button>
                         </div>
                     </div>
                 </div>
@@ -610,12 +560,12 @@
                     </div>
                     <div class="flex-1 flex flex-col items-center justify-center py-4 bg-white relative">
                         <div class="flag-render">${q.flag}</div>
-                        <h2 id="quiz-question-text" class="text-2xl font-black text-slate-800 mt-8 transition-all duration-300">これはどの国旗？</h2>
+                        <h2 id="quiz-question-text" class="text-2xl font-black text-slate-800 mt-8">これはどの国旗？</h2>
                     </div>
                     <div class="px-8 pb-12 overflow-y-auto custom-scroll bg-slate-50 pt-6">
                         <div class="grid grid-cols-1 gap-4">
                             ${q.options.map(opt => `
-                                <button id="choice-${opt}" onclick="handleAnswer('${opt}')" 
+                                <button onclick="handleAnswer('${opt}')" 
                                     class="choice-btn bg-white rounded-2xl text-slate-700 shadow-sm text-lg border-b-4 border-slate-200 active:border-b-0 hover:bg-blue-50 transition-all">
                                     ${opt}
                                 </button>
@@ -634,8 +584,8 @@
                     <div class="text-xl font-bold mb-2">ゲット数:</div>
                     <div class="text-8xl font-black mb-10">${state.getScore}</div>
                     <div class="w-full max-w-xs space-y-4">
-                        <button onclick="startQuiz()" class="w-full bg-white text-blue-600 font-black py-5 rounded-3xl shadow-2xl active:scale-95">もう一度調査</button>
-                        <button onclick="goHome()" class="w-full bg-blue-700 text-white font-black py-4 rounded-3xl active:scale-95 border border-blue-500">タイトルへ</button>
+                        <button onclick="uiClick(); startQuiz()" class="w-full bg-white text-blue-600 font-black py-5 rounded-3xl shadow-2xl active:scale-95">もう一度調査</button>
+                        <button onclick="uiClick(); goHome()" class="w-full bg-blue-700 text-white font-black py-4 rounded-3xl active:scale-95 border border-blue-500">タイトルへ</button>
                     </div>
                 </div>
             `;
@@ -643,7 +593,7 @@
             root.innerHTML = `
                 <div class="flex-1 flex flex-col h-full overflow-hidden">
                     <div class="p-6 flex items-center justify-between bg-white border-b shadow-sm z-10">
-                        <button onclick="goHome()" class="p-2 text-slate-800 font-black text-2xl">←</button>
+                        <button onclick="uiClick(); goHome()" class="p-2 text-slate-800 font-black text-2xl">←</button>
                         <h2 class="text-xl font-black text-slate-800 tracking-tighter">国旗図鑑 <span class="text-blue-600 ml-1">${state.collection.length}/${countryData.length}</span></h2>
                         <div class="w-10"></div>
                     </div>
@@ -653,7 +603,7 @@
                                 const isCaught = state.collection.includes(c.f);
                                 const isKnown = state.known.includes(c.f);
                                 return `
-                                    <div onclick="showDetails('${c.f}')" class="aspect-square relative rounded-3xl flex flex-col items-center justify-center transition-all bg-white shadow-sm border-2 ${isCaught ? 'border-yellow-400' : (isKnown ? 'border-blue-100' : 'border-slate-50 opacity-20')}">
+                                    <div onclick="uiClick(); showDetails('${c.f}')" class="aspect-square relative rounded-3xl flex flex-col items-center justify-center transition-all bg-white shadow-sm border-2 ${isCaught ? 'border-yellow-400' : (isKnown ? 'border-blue-100' : 'border-slate-50 opacity-20')}">
                                         ${isCaught ? '<div class="absolute -top-1 -right-1 bg-yellow-400 rounded-full w-6 h-6 flex items-center justify-center text-[10px] shadow-sm">⭐</div>' : ''}
                                         <div class="text-[44px] ${!isKnown ? 'grayscale' : ''}">${c.f}</div>
                                         <div class="text-[8px] font-black text-slate-400 mt-2 px-1 truncate w-full text-center">${isKnown ? c.n : '？？？'}</div>
@@ -662,7 +612,7 @@
                             }).join('')}
                         </div>
                         <div class="p-8">
-                            <button onclick="confirmReset()" class="w-full py-4 text-red-400 font-black text-sm hover:text-red-600 transition">図鑑をリセットする</button>
+                            <button onclick="uiClick(); confirmReset()" class="w-full py-4 text-red-400 font-black text-sm hover:text-red-600 transition">図鑑をリセットする</button>
                         </div>
                     </div>
                 </div>
@@ -724,23 +674,16 @@
         overlay.style.display = 'flex';
         setTimeout(() => overlay.classList.add('judge-show'), 10);
 
-        if (choice) {
-            const btn = document.getElementById(`choice-${choice}`);
-            if (btn) btn.classList.add(isCorrect ? 'bg-green-100' : 'bg-red-100', isCorrect ? 'text-green-700' : 'text-red-700');
-        }
-
         if (isCorrect) sounds.correct(); else sounds.wrong();
 
         if (!isCorrect) {
             await new Promise(r => setTimeout(r, 600));
             overlay.classList.remove('judge-show');
             setTimeout(() => overlay.style.display = 'none', 300);
-            
             if (questionText) {
-                questionText.textContent = choice === null ? "時間切れ！逃げられた！" : "逃げられた！";
-                questionText.classList.add('text-red-500', 'scale-125');
+                questionText.textContent = choice === null ? "時間切れ！" : "ちがうみたい...";
+                questionText.classList.add('text-red-500');
             }
-            
             await new Promise(r => setTimeout(r, 1200));
             state.isAnswering = false;
             nextQuestion();
@@ -753,11 +696,11 @@
             localStorage.setItem(STORAGE_KNOWN, JSON.stringify(state.known));
         }
 
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise(r => setTimeout(r, 800));
         overlay.classList.remove('judge-show');
         setTimeout(() => overlay.style.display = 'none', 300);
 
-        // ゲット演出
+        // ゲット演出開始
         const scene = document.getElementById('capture-scene');
         const target = document.getElementById('target-flag');
         const ball = document.getElementById('capture-ball');
@@ -769,11 +712,9 @@
         resultMsgArea.classList.add('opacity-0');
         halo.style.display = 'none';
         target.textContent = q.flag;
-        target.classList.remove('flag-capture-anim');
         target.style.opacity = "1";
         target.style.transform = "scale(1)";
         ball.classList.remove('ball-thrown', 'ball-wiggle');
-        actionMsg.classList.add('opacity-0');
         ball.style.display = 'block';
         ball.style.bottom = "10%";
         scene.style.display = 'flex';
@@ -781,7 +722,7 @@
         await new Promise(r => setTimeout(r, 200));
 
         if (isAlreadyCaught) {
-            actionMsg.textContent = "もうGETした国だ！";
+            actionMsg.textContent = "すでに仲間の国だ！";
             actionMsg.classList.remove('opacity-0');
             ball.style.display = 'none';
             for(let i=0; i<15; i++) setTimeout(() => createHeart(fxLayer), i * 50);
@@ -794,7 +735,8 @@
             
             await new Promise(r => setTimeout(r, 550));
             
-            target.classList.add('flag-capture-anim');
+            target.style.transform = "scale(0)";
+            target.style.opacity = "0";
             const flash = document.createElement('div');
             flash.className = 'flash-effect';
             fxLayer.appendChild(flash);
@@ -803,14 +745,14 @@
             ball.classList.add('ball-wiggle');
             actionMsg.classList.add('opacity-0');
 
-            const waitTime = Math.random() > 0.6 ? 2200 : 1200; 
+            const waitTime = Math.random() > 0.6 ? 2400 : 1200; 
             for(let j=0; j<waitTime/400; j++) {
                 setTimeout(() => sounds.tick(), j * 400);
             }
             await new Promise(r => setTimeout(r, waitTime));
 
             ball.classList.remove('ball-wiggle');
-            const success = Math.random() < 0.6; // 少し成功率アップ
+            const success = Math.random() < 0.65; 
 
             if (success) {
                 sounds.catch();
@@ -821,17 +763,17 @@
                 `;
                 resultMsgArea.classList.remove('opacity-0');
                 state.getScore++;
-                for(let i=0; i<35; i++) createConfetti(fxLayer);
+                for(let i=0; i<30; i++) createConfetti(fxLayer);
                 state.collection.push(q.flag);
                 localStorage.setItem(STORAGE_COLLECTION, JSON.stringify(state.collection));
                 ball.style.transform = "scale(0.4) rotate(0deg)";
             } else {
                 sounds.wrong();
-                resultMsgArea.innerHTML = `<div class="text-3xl font-black text-slate-400">逃げられた！</div>`;
+                resultMsgArea.innerHTML = `<div class="text-3xl font-black text-slate-400">逃げられた...</div>`;
                 resultMsgArea.classList.remove('opacity-0');
                 ball.style.display = 'none';
-                target.classList.remove('flag-capture-anim');
-                target.style.opacity = "0.2";
+                target.style.opacity = "0.3";
+                target.style.transform = "scale(0.8)";
             }
             await new Promise(r => setTimeout(r, 2200));
         }
@@ -858,7 +800,7 @@
         c.className = 'absolute w-2 h-2 rounded-full pointer-events-none';
         c.style.left = Math.random() * 100 + 'vw';
         c.style.backgroundColor = ['#fbbf24', '#3b82f6', '#ef4444', '#10b981'][Math.floor(Math.random()*4)];
-        c.style.top = '-20px'; c.style.zIndex = '210';
+        c.style.top = '-20px';
         parent.appendChild(c);
         const duration = Math.random() * 2 + 1;
         c.animate([{ transform: 'translateY(0) rotate(0deg)', opacity: 1 }, { transform: `translateY(100vh) rotate(${Math.random() * 720}deg)`, opacity: 0 }], { duration: duration * 1000 });
@@ -884,7 +826,7 @@
                     <h3 class="text-3xl font-black text-slate-800 mb-6">${country.n}</h3>
                     ${isCaught ? `
                         <div class="bg-blue-600 text-white p-5 rounded-3xl shadow-lg text-left">
-                            <span class="text-[10px] font-black opacity-60 block uppercase mb-1">Capital</span>
+                            <span class="text-[10px] font-black opacity-60 block uppercase mb-1">首都</span>
                             <p class="font-black text-xl">${country.c || "---"}</p>
                         </div>
                         <div class="bg-slate-100 p-5 rounded-3xl mt-4 text-left">
@@ -905,11 +847,22 @@
             <div class="text-left space-y-6 pb-6">
                 <div class="bg-blue-50 p-6 rounded-[2rem]">
                     <h3 class="text-blue-600 font-black text-lg mb-2">🎮 基本ルール</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed font-bold">1問10秒。正解すると国旗をゲットするチャンス！1回の調査は10問。</p>
+                    <p class="text-slate-600 text-sm leading-relaxed font-bold">
+                        1問につき制限時間は10秒です。正しい国名を選んでください。1回の調査は10問です。
+                    </p>
                 </div>
                 <div class="bg-amber-50 p-6 rounded-[2rem]">
-                    <h3 class="text-amber-600 font-black text-lg mb-2">🌏 キャッチ</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed font-bold">ボールの揺れが止まるまでドキドキ...。成功すると図鑑に登録されます。</p>
+                    <h3 class="text-amber-600 font-black text-lg mb-2">🌏 キャッチの仕組み</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed font-bold">
+                        クイズに正解すると、ボールを投げるチャンスが発生します。命中しても逃げられてしまうこともあります。
+                    </p>
+                </div>
+                <div class="bg-green-50 p-6 rounded-[2rem]">
+                    <h3 class="text-green-600 font-black text-lg mb-2">📚 図鑑について</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed font-bold">
+                        ゲットした国旗は図鑑に登録され、首都や特徴などの詳細データが見られるようになります。図鑑のデータはブラウザのキャッシュに保存されています。
+キャッシュをクリアすると、図鑑の収集状況が失われますのでご注意ください。
+                    </p>
                 </div>
             </div>
         `;
@@ -917,11 +870,13 @@
         document.getElementById('modal-overlay').classList.add('flex');
     }
 
+    
     function confirmReset() {
         const overlay = document.getElementById('confirm-overlay');
         const yesBtn = document.getElementById('confirm-yes');
         document.getElementById('confirm-content').innerHTML = `<p class="text-slate-800 font-black text-lg">図鑑をリセットしますか？</p>`;
         yesBtn.onclick = () => {
+            uiClick();
             state.collection = []; state.known = [];
             localStorage.removeItem(STORAGE_COLLECTION); localStorage.removeItem(STORAGE_KNOWN);
             closeConfirm(); goHome();
@@ -930,7 +885,6 @@
     }
 
     function startQuiz() {
-        initAudio();
         const shuffled = [...countryData].sort(() => Math.random() - 0.5);
         state.quiz = shuffled.slice(0, 10).map(c => {
             let opts = [c.n];
