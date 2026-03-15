@@ -52,9 +52,10 @@
         .judge-show #judge-icon { transform: scale(1); }
 
         /* タイマーバー */
-        .timer-container { width: 100%; height: 6px; background: #f1f5f9; position: relative; overflow: hidden; }
+        .timer-container { width: 100%; height: 8px; background: #f1f5f9; position: relative; overflow: hidden; }
         .timer-bar { height: 100%; background: #3b82f6; width: 100%; transition: width 0.1s linear; }
-        .timer-low { background: #ef4444 !important; }
+        .timer-low { background: #ef4444 !important; animation: pulse 0.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
         /* ゲット演出レイヤー */
         #capture-scene {
@@ -187,9 +188,9 @@
         }
 
         @keyframes fade-in-out {
-            0% { opacity: 0; transform: scale(0.5); }
-            10% { opacity: 1; transform: scale(1.1); }
-            90% { opacity: 1; transform: scale(1); }
+            0% { opacity: 0; transform: scale(0.8); }
+            20% { opacity: 1; transform: scale(1.1); }
+            80% { opacity: 1; transform: scale(1); }
             100% { opacity: 0; transform: scale(0.8); }
         }
         .animate-flag-switch { animation: fade-in-out 3s infinite; }
@@ -236,7 +237,6 @@
     </div>
 
 <script>
-
     // 254カ国の国旗データ
     const countryData = [
         {f: "🇯🇵", n: "日本", c: "東京", k: "アジアの島国。四季があり、伝統と最新技術が融合している。"},
@@ -500,10 +500,62 @@
         {f:"🇿🇼",n:"ジンバブエ",c:"ハラレ",k:"南部アフリカの内陸国。"}
     ];
 
-    const STORAGE_COLLECTION = 'flag_master_v20_caught';
-    const STORAGE_KNOWN = 'flag_master_v20_known';
-    const LIMIT_TIME = 10; // 制限時間
     
+    const STORAGE_COLLECTION = 'flag_master_v21_caught';
+    const STORAGE_KNOWN = 'flag_master_v21_known';
+    const LIMIT_TIME = 10;
+    
+    // --- Audio System ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) audioCtx = new AudioContext();
+    }
+
+    function playTone(freq, duration, type = 'sine', volume = 0.1) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    const sounds = {
+        correct: () => {
+            playTone(523.25, 0.1, 'square', 0.05); // C5
+            setTimeout(() => playTone(659.25, 0.2, 'square', 0.05), 100); // E5
+        },
+        wrong: () => {
+            playTone(220, 0.1, 'sawtooth', 0.1); // A3
+            setTimeout(() => playTone(196, 0.3, 'sawtooth', 0.1), 100); // G3
+        },
+        throw: () => {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        },
+        catch: () => {
+            [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+                setTimeout(() => playTone(f, 0.4, 'triangle', 0.08), i * 100);
+            });
+        },
+        tick: () => playTone(880, 0.05, 'sine', 0.02)
+    };
+
+    // --- State ---
     let state = {
         screen: 'title',
         quiz: [],
@@ -627,11 +679,14 @@
             const percentage = (state.timeLeft / LIMIT_TIME) * 100;
             if (bar) {
                 bar.style.width = percentage + "%";
-                if (state.timeLeft <= 3) bar.classList.add('timer-low');
+                if (state.timeLeft <= 3) {
+                    bar.classList.add('timer-low');
+                    if (Math.abs(state.timeLeft % 0.5) < 0.1) sounds.tick();
+                }
             }
             if (state.timeLeft <= 0) {
                 clearInterval(state.timerInterval);
-                handleAnswer(null); // 時間切れ
+                handleAnswer(null);
             }
         }, 100);
     }
@@ -649,54 +704,8 @@
         if(titleFlagInterval) clearInterval(titleFlagInterval);
     }
 
-    function showHowTo() {
-        const content = document.getElementById('modal-content');
-        content.innerHTML = `
-            <div class="text-left space-y-6 pb-6">
-                <div class="bg-blue-50 p-6 rounded-[2rem]">
-                    <h3 class="text-blue-600 font-black text-lg mb-2">🎮 基本ルール</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed font-bold">
-                        1問につき制限時間は10秒です。正しい国名を選んでください。1回の調査は10問です。
-                    </p>
-                </div>
-                <div class="bg-amber-50 p-6 rounded-[2rem]">
-                    <h3 class="text-amber-600 font-black text-lg mb-2">🌏 キャッチの仕組み</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed font-bold">
-                        クイズに正解すると、ボールを投げるチャンスが発生します。命中しても逃げられてしまうこともあります。
-                    </p>
-                </div>
-                <div class="bg-green-50 p-6 rounded-[2rem]">
-                    <h3 class="text-green-600 font-black text-lg mb-2">📚 図鑑について</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed font-bold">
-                        ゲットした国旗は図鑑に登録され、首都や特徴などの詳細データが見られるようになります。図鑑のデータはブラウザのキャッシュに保存されています。
-キャッシュをクリアすると、図鑑の収集状況が失われますのでご注意ください。
-                    </p>
-                </div>
-            </div>
-        `;
-        document.getElementById('modal-overlay').classList.remove('hidden');
-        document.getElementById('modal-overlay').classList.add('flex');
-    }
-
-    function confirmReset() {
-        const overlay = document.getElementById('confirm-overlay');
-        const yesBtn = document.getElementById('confirm-yes');
-        document.getElementById('confirm-content').innerHTML = `
-            <div class="text-6xl mb-4">🌏💦</div>
-            <p class="text-slate-800 font-black text-lg mb-2">図鑑を消しますか？</p>
-        `;
-        yesBtn.onclick = () => {
-            state.collection = []; state.known = [];
-            localStorage.removeItem(STORAGE_COLLECTION);
-            localStorage.removeItem(STORAGE_KNOWN);
-            closeConfirm(); goHome();
-        };
-        overlay.classList.remove('hidden'); overlay.classList.add('flex');
-    }
-
-    function closeConfirm() { document.getElementById('confirm-overlay').classList.add('hidden'); }
-
     async function handleAnswer(choice) {
+        initAudio();
         if (state.isAnswering) return;
         state.isAnswering = true;
         clearInterval(state.timerInterval);
@@ -720,15 +729,15 @@
             if (btn) btn.classList.add(isCorrect ? 'bg-green-100' : 'bg-red-100', isCorrect ? 'text-green-700' : 'text-red-700');
         }
 
+        if (isCorrect) sounds.correct(); else sounds.wrong();
+
         if (!isCorrect) {
             await new Promise(r => setTimeout(r, 600));
-            // ❌を消して「逃げられた」を表示
             overlay.classList.remove('judge-show');
             setTimeout(() => overlay.style.display = 'none', 300);
             
             if (questionText) {
                 questionText.textContent = choice === null ? "時間切れ！逃げられた！" : "逃げられた！";
-                questionText.classList.remove('text-slate-800');
                 questionText.classList.add('text-red-500', 'scale-125');
             }
             
@@ -748,7 +757,7 @@
         overlay.classList.remove('judge-show');
         setTimeout(() => overlay.style.display = 'none', 300);
 
-        // ゲット演出開始
+        // ゲット演出
         const scene = document.getElementById('capture-scene');
         const target = document.getElementById('target-flag');
         const ball = document.getElementById('capture-ball');
@@ -781,6 +790,7 @@
             actionMsg.textContent = "ボールをなげた！";
             actionMsg.classList.remove('opacity-0');
             ball.classList.add('ball-thrown');
+            sounds.throw();
             
             await new Promise(r => setTimeout(r, 550));
             
@@ -794,16 +804,20 @@
             actionMsg.classList.add('opacity-0');
 
             const waitTime = Math.random() > 0.6 ? 2200 : 1200; 
+            for(let j=0; j<waitTime/400; j++) {
+                setTimeout(() => sounds.tick(), j * 400);
+            }
             await new Promise(r => setTimeout(r, waitTime));
 
             ball.classList.remove('ball-wiggle');
-            const success = Math.random() < 0.5;
+            const success = Math.random() < 0.6; // 少し成功率アップ
 
             if (success) {
+                sounds.catch();
                 halo.style.display = 'block'; 
                 resultMsgArea.innerHTML = `
-                    <div class="text-red-600 font-black text-2xl drop-shadow-sm mb-1 uppercase tracking-tighter">${q.name}</div>
-                    <div class="text-5xl font-black text-yellow-500 animate-bounce drop-shadow-lg">GET！</div>
+                    <div class="text-red-600 font-black text-2xl mb-1">${q.name}</div>
+                    <div class="text-5xl font-black text-yellow-500 animate-bounce">GET！</div>
                 `;
                 resultMsgArea.classList.remove('opacity-0');
                 state.getScore++;
@@ -812,6 +826,7 @@
                 localStorage.setItem(STORAGE_COLLECTION, JSON.stringify(state.collection));
                 ball.style.transform = "scale(0.4) rotate(0deg)";
             } else {
+                sounds.wrong();
                 resultMsgArea.innerHTML = `<div class="text-3xl font-black text-slate-400">逃げられた！</div>`;
                 resultMsgArea.classList.remove('opacity-0');
                 ball.style.display = 'none';
@@ -882,8 +897,40 @@
     }
 
     function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+    function closeConfirm() { document.getElementById('confirm-overlay').classList.add('hidden'); }
+
+    function showHowTo() {
+        const content = document.getElementById('modal-content');
+        content.innerHTML = `
+            <div class="text-left space-y-6 pb-6">
+                <div class="bg-blue-50 p-6 rounded-[2rem]">
+                    <h3 class="text-blue-600 font-black text-lg mb-2">🎮 基本ルール</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed font-bold">1問10秒。正解すると国旗をゲットするチャンス！1回の調査は10問。</p>
+                </div>
+                <div class="bg-amber-50 p-6 rounded-[2rem]">
+                    <h3 class="text-amber-600 font-black text-lg mb-2">🌏 キャッチ</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed font-bold">ボールの揺れが止まるまでドキドキ...。成功すると図鑑に登録されます。</p>
+                </div>
+            </div>
+        `;
+        document.getElementById('modal-overlay').classList.remove('hidden');
+        document.getElementById('modal-overlay').classList.add('flex');
+    }
+
+    function confirmReset() {
+        const overlay = document.getElementById('confirm-overlay');
+        const yesBtn = document.getElementById('confirm-yes');
+        document.getElementById('confirm-content').innerHTML = `<p class="text-slate-800 font-black text-lg">図鑑をリセットしますか？</p>`;
+        yesBtn.onclick = () => {
+            state.collection = []; state.known = [];
+            localStorage.removeItem(STORAGE_COLLECTION); localStorage.removeItem(STORAGE_KNOWN);
+            closeConfirm(); goHome();
+        };
+        overlay.classList.remove('hidden'); overlay.classList.add('flex');
+    }
 
     function startQuiz() {
+        initAudio();
         const shuffled = [...countryData].sort(() => Math.random() - 0.5);
         state.quiz = shuffled.slice(0, 10).map(c => {
             let opts = [c.n];
