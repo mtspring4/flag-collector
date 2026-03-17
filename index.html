@@ -722,7 +722,18 @@
         await new Promise(r => setTimeout(r, 200));
 
         if (isAlreadyCaught) {
-            actionMsg.textContent = "すでに仲間の国だ！";
+            actionMsg.innerHTML = `
+            <div class="text-xl font-black text-gray-500 mb-2">
+                すでに仲間の国だ！
+            </div>
+            <div class="bg-slate-100 rounded-xl p-3 mt-2 text-left">
+                <div class="text-lg font-bold">
+                    首都：${currentCountry.c}
+                </div>
+                <div class="text-sm text-slate-600 mt-1">
+                    ${currentCountry.k}
+                </div>
+            </div>`;
             actionMsg.classList.remove('opacity-0');
             ball.style.display = 'none';
             for(let i=0; i<15; i++) setTimeout(() => createHeart(fxLayer), i * 50);
