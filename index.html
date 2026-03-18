@@ -1,3 +1,4 @@
+Geminiさくsい
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -68,6 +69,7 @@
             justify-content: center;
             background: radial-gradient(circle, #ffffff 0%, #f1f5f9 100%);
             overflow: hidden;
+            cursor: pointer;
         }
 
         .halo-effect {
@@ -152,13 +154,15 @@
             <div id="judge-icon"></div>
         </div>
 
-        <div id="capture-scene">
+        <div id="capture-scene" onclick="handleCaptureSceneClick()">
             <div id="fx-layer"></div>
             <div id="halo-ring" class="halo-effect"></div>
             <div id="target-flag" class="flag-render mb-12 text-center"></div>
             <div id="ball-action-msg" class="w-full px-8 text-center opacity-0 transition-opacity duration-300 z-[205]"></div>
             <div id="capture-ball" class="ball">🌏</div>
             <div id="capture-msg" class="mt-24 text-center z-[205] opacity-0 transition-opacity duration-300"></div>
+            <!-- スキップガイド -->
+            <div id="skip-guide" class="absolute bottom-6 text-slate-400 font-bold text-xs animate-pulse hidden">画面タップでつぎへ</div>
         </div>
 
         <!-- モーダル系 -->
@@ -183,7 +187,7 @@
     </div>
 
 <script>
-    // 254カ国の国旗データ
+    // 259カ国の国旗データ
     const countryData = [
         {f: "🇯🇵", n: "日本", c: "東京", k: "東アジアの島国。四季があり、寿司やアニメなど独自文化が世界的に人気。"},
         {f: "🇺🇸", n: "アメリカ", c: "ワシントンD.C.", k: "北アメリカの大国。多民族社会で映画や音楽など文化の発信地。"},
@@ -518,7 +522,9 @@
         isAnswering: false,
         titleFlag: "🇯🇵",
         timeLeft: LIMIT_TIME,
-        timerInterval: null
+        timerInterval: null,
+        isCapturingAlreadyKnown: false, // スキップ可能な状態かどうか
+        captureTimeout: null // タイマーIDを保持
     };
 
     let titleFlagInterval;
@@ -655,6 +661,22 @@
         if(titleFlagInterval) clearInterval(titleFlagInterval);
     }
 
+    // すでに仲間の時のスキップ処理
+    function handleCaptureSceneClick() {
+        if (state.isCapturingAlreadyKnown) {
+            if (state.captureTimeout) clearTimeout(state.captureTimeout);
+            finishCaptureAndNext();
+        }
+    }
+
+    function finishCaptureAndNext() {
+        state.isCapturingAlreadyKnown = false;
+        document.getElementById('capture-scene').style.display = 'none';
+        document.getElementById('skip-guide').classList.add('hidden');
+        state.isAnswering = false;
+        nextQuestion();
+    }
+
     async function handleAnswer(choice) {
         initAudio();
         if (state.isAnswering) return;
@@ -709,6 +731,7 @@
         const resultMsgArea = document.getElementById('capture-msg');
         const fxLayer = document.getElementById('fx-layer');
         const halo = document.getElementById('halo-ring');
+        const skipGuide = document.getElementById('skip-guide');
         
         resultMsgArea.classList.add('opacity-0');
         halo.style.display = 'none';
@@ -723,7 +746,9 @@
         await new Promise(r => setTimeout(r, 200));
 
         if (isAlreadyCaught) {
-            // ここが修正箇所：首都と説明を表示
+            state.isCapturingAlreadyKnown = true;
+            skipGuide.classList.remove('hidden');
+
             actionMsg.innerHTML = `
                 <div class="mb-2">
                     <span class="bg-gray-200 text-gray-600 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider">Discovery</span>
@@ -743,7 +768,12 @@
             actionMsg.classList.remove('opacity-0');
             ball.style.display = 'none';
             for(let i=0; i<15; i++) setTimeout(() => createHeart(fxLayer), i * 50);
-            await new Promise(r => setTimeout(r, 5000)); // 情報を見せるために少し長めに待機
+            
+            // タイムアウトを記録
+            state.captureTimeout = setTimeout(() => {
+                if (state.isCapturingAlreadyKnown) finishCaptureAndNext();
+            }, 6000);
+
         } else {
             actionMsg.innerHTML = `<div class="text-blue-600 font-black text-2xl italic tracking-widest">ボールをなげた！</div>`;
             actionMsg.classList.remove('opacity-0');
@@ -793,11 +823,10 @@
                 target.style.transform = "scale(0.8)";
             }
             await new Promise(r => setTimeout(r, 2200));
+            scene.style.display = 'none';
+            state.isAnswering = false;
+            nextQuestion();
         }
-
-        scene.style.display = 'none';
-        state.isAnswering = false;
-        nextQuestion();
     }
 
     function createHeart(parent) {
@@ -903,10 +932,9 @@
     function startQuiz() {
         const shuffled = [...countryData].sort(() => Math.random() - 0.5);
         state.quiz = shuffled.slice(0, 10).map(c => {
-            let opts = [c.n];
             let pool = countryData.filter(x => x.n !== c.n).sort(() => Math.random() - 0.5);
+            let opts = [c.n];
             opts.push(...pool.slice(0, 3).map(x => x.n));
-            // 修正：クイズデータに首都cと説明kも含めるように変更
             return { flag: c.f, name: c.n, c: c.c, k: c.k, options: opts.sort(() => Math.random() - 0.5) };
         });
         state.index = 0; state.correctCount = 0; state.getScore = 0; state.screen = 'quiz'; render();
