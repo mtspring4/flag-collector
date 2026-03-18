@@ -742,7 +742,7 @@
             actionMsg.classList.remove('opacity-0');
             ball.style.display = 'none';
             for(let i=0; i<15; i++) setTimeout(() => createHeart(fxLayer), i * 50);
-            await new Promise(r => setTimeout(r, 3000)); // 情報を見せるために少し長めに待機
+            await new Promise(r => setTimeout(r, 5000)); // 情報を見せるために少し長めに待機
         } else {
             actionMsg.innerHTML = `<div class="text-blue-600 font-black text-2xl italic tracking-widest">ボールをなげた！</div>`;
             actionMsg.classList.remove('opacity-0');
