@@ -154,12 +154,12 @@
         </div>
 
         <div id="capture-scene" onclick="handleCaptureSceneClick()">
-            <div id="fx-layer"></div>
+            <div id="fx-layer" class="pointer-events-none absolute inset-0 z-[210]"></div>
             <div id="halo-ring" class="halo-effect"></div>
             <div id="target-flag" class="flag-render mb-12 text-center"></div>
             <div id="ball-action-msg" class="w-full px-8 text-center opacity-0 transition-opacity duration-300 z-[205]"></div>
             <div id="capture-ball" class="ball">🌏</div>
-            <div id="capture-msg" class="mt-24 text-center z-[205] opacity-0 transition-opacity duration-300"></div>
+            <div id="capture-msg" class="w-full px-8 mt-4 text-center z-[205] opacity-0 transition-opacity duration-300"></div>
             <!-- スキップガイド -->
             <div id="skip-guide" class="absolute bottom-6 text-slate-400 font-bold text-xs animate-pulse hidden">画面タップでつぎへ</div>
         </div>
@@ -186,7 +186,7 @@
     </div>
 
 <script>
-    // 259カ国の国旗データ
+    // 259カ国の国旗データ (全件維持)
     const countryData = [
         {f: "🇯🇵", n: "日本", c: "東京", k: "東アジアの島国。四季があり、寿司やアニメなど独自文化が世界的に人気。"},
         {f: "🇺🇸", n: "アメリカ", c: "ワシントンD.C.", k: "北アメリカの大国。多民族社会で映画や音楽など文化の発信地。"},
@@ -522,8 +522,8 @@
         titleFlag: "🇯🇵",
         timeLeft: LIMIT_TIME,
         timerInterval: null,
-        isCapturingAlreadyKnown: false, // スキップ可能な状態かどうか
-        captureTimeout: null // タイマーIDを保持
+        isCapturingAlreadyKnown: false,
+        captureTimeout: null
     };
 
     let titleFlagInterval;
@@ -660,7 +660,6 @@
         if(titleFlagInterval) clearInterval(titleFlagInterval);
     }
 
-    // すでに仲間の時のスキップ処理
     function handleCaptureSceneClick() {
         if (state.isCapturingAlreadyKnown) {
             if (state.captureTimeout) clearTimeout(state.captureTimeout);
@@ -670,8 +669,17 @@
 
     function finishCaptureAndNext() {
         state.isCapturingAlreadyKnown = false;
-        document.getElementById('capture-scene').style.display = 'none';
-        document.getElementById('skip-guide').classList.add('hidden');
+        // リセット処理
+        const scene = document.getElementById('capture-scene');
+        const skipGuide = document.getElementById('skip-guide');
+        const actionMsg = document.getElementById('ball-action-msg');
+        const resultMsg = document.getElementById('capture-msg');
+        
+        scene.style.display = 'none';
+        skipGuide.classList.add('hidden');
+        actionMsg.classList.add('opacity-0');
+        resultMsg.classList.add('opacity-0');
+        
         state.isAnswering = false;
         nextQuestion();
     }
@@ -732,6 +740,8 @@
         const halo = document.getElementById('halo-ring');
         const skipGuide = document.getElementById('skip-guide');
         
+        // 以前の表示を完全にリセット
+        actionMsg.classList.add('opacity-0');
         resultMsgArea.classList.add('opacity-0');
         halo.style.display = 'none';
         target.textContent = q.flag;
@@ -754,7 +764,7 @@
                     <h3 class="text-gray-500 font-black text-xl mt-1 italic">すでに仲間の国だ！</h3>
                 </div>
                 <div class="bg-white/80 backdrop-blur-sm border-2 border-slate-100 rounded-[2rem] p-5 shadow-sm text-left animate-in fade-in zoom-in duration-500">
-                    <dev class="text-3xl font-black text-slate-800 mb-6">${q.name}</dev>
+                    <div class="text-3xl font-black text-slate-800 mb-6">${q.name}</div>
                     <div class="flex items-center gap-2 mb-2">
                          <div class="bg-blue-600 w-2 h-6 rounded-full"></div>
                          <span class="text-blue-600 font-black text-lg">首都: ${q.c || "---"}</span>
@@ -768,7 +778,6 @@
             ball.style.display = 'none';
             for(let i=0; i<15; i++) setTimeout(() => createHeart(fxLayer), i * 50);
             
-            // タイムアウトを記録
             state.captureTimeout = setTimeout(() => {
                 if (state.isCapturingAlreadyKnown) finishCaptureAndNext();
             }, 6000);
@@ -804,9 +813,9 @@
                 sounds.catch();
                 halo.style.display = 'block'; 
                 resultMsgArea.innerHTML = `
-                    <div class="text-5xl font-black text-yellow-500 animate-bounce">GET！</div>
-                    <div class="bg-white/80 backdrop-blur-sm border-2 border-slate-100 rounded-[2rem] p-5 shadow-sm text-left animate-in fade-in zoom-in duration-500">
-                        <dev class="text-3xl font-black text-slate-800 mb-6">${q.name}</dev>
+                    <div class="text-5xl font-black text-yellow-500 animate-bounce mb-4">GET！</div>
+                    <div class="bg-white/80 backdrop-blur-sm border-2 border-slate-100 rounded-[2rem] p-5 shadow-sm text-left animate-in fade-in zoom-in duration-500 max-w-xs mx-auto">
+                        <div class="text-3xl font-black text-slate-800 mb-4">${q.name}</div>
                         <div class="flex items-center gap-2 mb-2">
                              <div class="bg-blue-600 w-2 h-6 rounded-full"></div>
                              <span class="text-blue-600 font-black text-lg">首都: ${q.c || "---"}</span>
@@ -830,8 +839,12 @@
                 target.style.opacity = "0.3";
                 target.style.transform = "scale(0.8)";
             }
+            
             await new Promise(r => setTimeout(r, 2200));
+            // 通常ゲット時のクリーンアップ
             scene.style.display = 'none';
+            actionMsg.classList.add('opacity-0');
+            resultMsgArea.classList.add('opacity-0');
             state.isAnswering = false;
             nextQuestion();
         }
@@ -879,11 +892,11 @@
                     <div class="text-8xl mb-4 drop-shadow-xl">${country.f}</div>
                     <h3 class="text-3xl font-black text-slate-800 mb-6">${country.n}</h3>
                     ${isCaught ? `
-                        <div class="bg-blue-600 text-white p-5 rounded-3xl shadow-lg text-left">
+                        <div class="bg-blue-600 text-white p-5 rounded-3xl shadow-lg text-left mb-4">
                             <span class="text-[10px] font-black opacity-60 block uppercase mb-1">首都</span>
                             <p class="font-black text-xl">${country.c || "---"}</p>
                         </div>
-                        <div class="bg-slate-100 p-5 rounded-3xl mt-4 text-left">
+                        <div class="bg-slate-100 p-5 rounded-3xl text-left">
                             <p class="text-slate-700 text-sm font-bold leading-relaxed">${country.k || "詳細データ収集中..."}</p>
                         </div>
                     ` : `<div class="p-6 border-2 border-dashed border-slate-200 rounded-3xl text-slate-400 font-bold">ゲットすると詳細が見れます</div>`}
@@ -914,7 +927,7 @@
                 <div class="bg-green-50 p-6 rounded-[2rem]">
                     <h3 class="text-green-600 font-black text-lg mb-2">📚 図鑑について</h3>
                     <p class="text-slate-600 text-sm leading-relaxed font-bold">
-                        ゲットした国旗は図鑑に登録され、首都や特徴などの詳細データが見られるようになります。図鑑のデータはブラウザのキャッシュに保存されています。
+                        ゲットした国旗は図鑑に登録され、首都や特徴などの詳細データが見られるようになります。
                     </p>
                 </div>
             </div>
@@ -923,7 +936,6 @@
         document.getElementById('modal-overlay').classList.add('flex');
     }
 
-    
     function confirmReset() {
         const overlay = document.getElementById('confirm-overlay');
         const yesBtn = document.getElementById('confirm-yes');
