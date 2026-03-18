@@ -722,24 +722,28 @@
         await new Promise(r => setTimeout(r, 200));
 
         if (isAlreadyCaught) {
+            // ここが修正箇所：首都と説明を表示
             actionMsg.innerHTML = `
-            <div class="text-xl font-black text-gray-500 mb-2">
-                すでに仲間の国だ！
-            </div>
-            <div class="bg-slate-100 rounded-xl p-3 mt-2 text-left">
-                <div class="text-lg font-bold">
-                    首都：${q.c}
+                <div class="mb-2">
+                    <span class="bg-gray-200 text-gray-600 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider">Discovery</span>
+                    <h3 class="text-gray-500 font-black text-xl mt-1 italic">すでに仲間の国だ！</h3>
                 </div>
-                <div class="text-sm text-slate-600 mt-1">
-                    ${q.k}
+                <div class="bg-white/80 backdrop-blur-sm border-2 border-slate-100 rounded-[2rem] p-5 shadow-sm text-left animate-in fade-in zoom-in duration-500">
+                    <div class="flex items-center gap-2 mb-2">
+                         <div class="bg-blue-600 w-2 h-6 rounded-full"></div>
+                         <span class="text-blue-600 font-black text-lg">首都: ${q.c || "---"}</span>
+                    </div>
+                    <p class="text-slate-600 text-sm font-bold leading-relaxed">
+                        ${q.k || "詳細データ収集中..."}
+                    </p>
                 </div>
-            </div>`;
+            `;
             actionMsg.classList.remove('opacity-0');
             ball.style.display = 'none';
             for(let i=0; i<15; i++) setTimeout(() => createHeart(fxLayer), i * 50);
-            await new Promise(r => setTimeout(r, 1800));
+            await new Promise(r => setTimeout(r, 3000)); // 情報を見せるために少し長めに待機
         } else {
-            actionMsg.textContent = "ボールをなげた！";
+            actionMsg.innerHTML = `<div class="text-blue-600 font-black text-2xl italic tracking-widest">ボールをなげた！</div>`;
             actionMsg.classList.remove('opacity-0');
             ball.classList.add('ball-thrown');
             sounds.throw();
