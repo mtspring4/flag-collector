@@ -937,6 +937,8 @@
                     <h3 class="text-green-600 font-black text-lg mb-2">📚 図鑑について</h3>
                     <p class="text-slate-600 text-sm leading-relaxed font-bold">
                         ゲットした国旗は図鑑に登録され、首都や特徴などの詳細データが見られるようになります。
+                        図鑑は収集度はブラウザのキャッシュに保存されています。
+                        キャッシュを消すと図鑑の収集度はきえてしまいます。
                     </p>
                 </div>
             </div>
@@ -948,7 +950,10 @@
     function confirmReset() {
         const overlay = document.getElementById('confirm-overlay');
         const yesBtn = document.getElementById('confirm-yes');
-        document.getElementById('confirm-content').innerHTML = `<p class="text-slate-800 font-black text-lg">図鑑をリセットしますか？</p>`;
+        document.getElementById('confirm-content').innerHTML = `
+            <p class="text-slate-800 font-black text-lg">図鑑をリセットしますか？</p>
+            <p class="text-slate-600 text-[11px] font-bold leading-relaxed">図鑑の収集度を戻すことはできません！</p>
+        `;
         yesBtn.onclick = () => {
             uiClick();
             state.collection = []; state.known = [];
