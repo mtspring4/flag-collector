@@ -65,7 +65,8 @@
             display: none;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start; /* 上部固定にしてズレを防ぐ */
+            padding-top: 15vh;
             background: radial-gradient(circle, #ffffff 0%, #f1f5f9 100%);
             overflow: hidden;
             cursor: pointer;
@@ -75,6 +76,10 @@
             position: absolute;
             width: 800px;
             height: 800px;
+            top: 50%;
+            left: 50%;
+            margin-top: -400px;
+            margin-left: -400px;
             background: conic-gradient(from 0deg, transparent 0deg, rgba(255, 215, 0, 0.4) 10deg, transparent 20deg, transparent 30deg, rgba(255, 215, 0, 0.4) 40deg, transparent 50deg, transparent 60deg, rgba(255, 215, 0, 0.4) 70deg, transparent 80deg, transparent 90deg, rgba(255, 215, 0, 0.4) 100deg, transparent 110deg, transparent 120deg, rgba(255, 215, 0, 0.4) 130deg, transparent 140deg, transparent 150deg, rgba(255, 215, 0, 0.4) 160deg, transparent 170deg, transparent 180deg, rgba(255, 215, 0, 0.4) 190deg, transparent 200deg, transparent 210deg, rgba(255, 215, 0, 0.4) 220deg, transparent 230deg, transparent 240deg, rgba(255, 215, 0, 0.4) 250deg, transparent 260deg, transparent 270deg, rgba(255, 215, 0, 0.4) 280deg, transparent 290deg, transparent 300deg, rgba(255, 215, 0, 0.4) 310deg, transparent 320deg, transparent 330deg, rgba(255, 215, 0, 0.4) 340deg, transparent 350deg);
             animation: rotate-halo 10s linear infinite;
             z-index: 201;
@@ -156,10 +161,19 @@
         <div id="capture-scene" onclick="handleCaptureSceneClick()">
             <div id="fx-layer" class="pointer-events-none absolute inset-0 z-[210]"></div>
             <div id="halo-ring" class="halo-effect"></div>
-            <div id="target-flag" class="flag-render mb-12 text-center"></div>
-            <div id="ball-action-msg" class="w-full px-8 text-center opacity-0 transition-opacity duration-300 z-[205]"></div>
+            
+            <!-- コンテンツエリアをグループ化 -->
+            <div class="flex flex-col items-center w-full z-[205]">
+                <div id="target-flag" class="flag-render text-center"></div>
+                <!-- メッセージエリアの高さを確保しつつ、要素が増えても位置を崩さない -->
+                <div id="capture-message-container" class="w-full px-8 mt-6 min-h-[200px] flex flex-col items-center">
+                    <div id="ball-action-msg" class="w-full text-center opacity-0 transition-opacity duration-300"></div>
+                    <div id="capture-msg" class="w-full text-center opacity-0 transition-opacity duration-300"></div>
+                </div>
+            </div>
+            
             <div id="capture-ball" class="ball">🌏</div>
-            <div id="capture-msg" class="w-full px-8 mt-4 text-center z-[205] opacity-0 transition-opacity duration-300"></div>
+            
             <!-- スキップガイド -->
             <div id="skip-guide" class="absolute bottom-6 text-slate-400 font-bold text-xs animate-pulse hidden">画面タップでつぎへ</div>
         </div>
@@ -186,7 +200,6 @@
     </div>
 
 <script>
-    // 259カ国の国旗データ (全件維持)
     const countryData = [
         {f: "🇯🇵", n: "日本", c: "東京", k: "東アジアの島国。四季があり、寿司やアニメなど独自文化が世界的に人気。"},
         {f: "🇺🇸", n: "アメリカ", c: "ワシントンD.C.", k: "北アメリカの大国。多民族社会で映画や音楽など文化の発信地。"},
@@ -448,12 +461,11 @@
         {f:"🇿🇲",n:"ザンビア",c:"ルサカ",k:"南部アフリカの国。世界最大級ビクトリア滝。"},
         {f:"🇿🇼",n:"ジンバブエ",c:"ハラレ",k:"南部アフリカの国。世界遺産グレートジンバブエ。"},
     ];
-    
+
     const STORAGE_COLLECTION = 'flag_master_v22_caught';
     const STORAGE_KNOWN = 'flag_master_v22_known';
     const LIMIT_TIME = 10;
     
-    // --- 音響システム ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
 
@@ -509,7 +521,6 @@
         sounds.btn();
     }
 
-    // --- 状態管理 ---
     let state = {
         screen: 'title',
         quiz: [],
@@ -669,7 +680,6 @@
 
     function finishCaptureAndNext() {
         state.isCapturingAlreadyKnown = false;
-        // リセット処理
         const scene = document.getElementById('capture-scene');
         const skipGuide = document.getElementById('skip-guide');
         const actionMsg = document.getElementById('ball-action-msg');
@@ -752,11 +762,6 @@
         ball.style.bottom = "10%";
         scene.style.display = 'flex';
 
-        // ★これを追加
-        target.style.transform = "scale(1) translateY(0)";        
-        ball.style.transform = "scale(1) translateY(0) rotate(0deg)";
-
-        
         await new Promise(r => setTimeout(r, 200));
 
         if (isAlreadyCaught) {
@@ -765,16 +770,16 @@
 
             actionMsg.innerHTML = `
                 <div class="mb-2">
-                    <span class="bg-gray-200 text-gray-600 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider">Discovery</span>
-                    <h3 class="text-gray-500 font-black text-xl mt-1 italic">すでに仲間の国だ！</h3>
+                    <span class="bg-gray-200 text-gray-600 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">Discovery</span>
+                    <h3 class="text-gray-500 font-black text-lg mt-1 italic">すでに仲間の国だ！</h3>
                 </div>
-                <div class="bg-white/80 backdrop-blur-sm border-2 border-slate-100 rounded-[2rem] p-5 shadow-sm text-left animate-in fade-in zoom-in duration-500">
-                    <div class="text-3xl font-black text-slate-800 mb-6">${q.name}</div>
+                <div class="bg-white/90 backdrop-blur-sm border-2 border-slate-100 rounded-[2rem] p-5 shadow-lg text-left animate-in fade-in zoom-in duration-500 w-full max-w-xs">
+                    <div class="text-2xl font-black text-slate-800 mb-4">${q.name}</div>
                     <div class="flex items-center gap-2 mb-2">
-                         <div class="bg-blue-600 w-2 h-6 rounded-full"></div>
-                         <span class="text-blue-600 font-black text-lg">首都: ${q.c || "---"}</span>
+                         <div class="bg-blue-600 w-2 h-5 rounded-full"></div>
+                         <span class="text-blue-600 font-black text-sm">首都: ${q.c || "---"}</span>
                     </div>
-                    <p class="text-slate-600 text-sm font-bold leading-relaxed">
+                    <p class="text-slate-600 text-[11px] font-bold leading-relaxed">
                         ${q.k || "詳細データ収集中..."}
                     </p>
                 </div>
@@ -785,7 +790,7 @@
             
             state.captureTimeout = setTimeout(() => {
                 if (state.isCapturingAlreadyKnown) finishCaptureAndNext();
-            }, 6000);
+            }, 5000);
 
         } else {
             actionMsg.innerHTML = `<div class="text-blue-600 font-black text-2xl italic tracking-widest">ボールをなげた！</div>`;
@@ -818,14 +823,14 @@
                 sounds.catch();
                 halo.style.display = 'block'; 
                 resultMsgArea.innerHTML = `
-                    <div class="text-5xl font-black text-yellow-500 animate-bounce mb-4">GET！</div>
-                    <div class="bg-white/80 backdrop-blur-sm border-2 border-slate-100 rounded-[2rem] p-5 shadow-sm text-left animate-in fade-in zoom-in duration-500 max-w-xs mx-auto">
-                        <div class="text-3xl font-black text-slate-800 mb-4">${q.name}</div>
+                    <div class="text-4xl font-black text-yellow-500 animate-bounce mb-4">GET！</div>
+                    <div class="bg-white/90 backdrop-blur-sm border-2 border-slate-100 rounded-[2rem] p-5 shadow-lg text-left animate-in fade-in zoom-in duration-500 w-full max-w-xs">
+                        <div class="text-2xl font-black text-slate-800 mb-4">${q.name}</div>
                         <div class="flex items-center gap-2 mb-2">
-                             <div class="bg-blue-600 w-2 h-6 rounded-full"></div>
-                             <span class="text-blue-600 font-black text-lg">首都: ${q.c || "---"}</span>
+                             <div class="bg-blue-600 w-2 h-5 rounded-full"></div>
+                             <span class="text-blue-600 font-black text-sm">首都: ${q.c || "---"}</span>
                         </div>
-                        <p class="text-slate-600 text-sm font-bold leading-relaxed">
+                        <p class="text-slate-600 text-[11px] font-bold leading-relaxed">
                             ${q.k || "詳細データ収集中..."}
                         </p>
                     </div>
@@ -845,8 +850,7 @@
                 target.style.transform = "scale(0.8)";
             }
             
-            await new Promise(r => setTimeout(r, 2200));
-            // 通常ゲット時のクリーンアップ
+            await new Promise(r => setTimeout(r, 2500));
             scene.style.display = 'none';
             actionMsg.classList.add('opacity-0');
             resultMsgArea.classList.add('opacity-0');
